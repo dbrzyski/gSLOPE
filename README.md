@@ -1,12 +1,4 @@
 # gSLOPE
-group SLOPE  - statistical method for explanatory variables groups selection with gFDR control
+group SLOPE  - statistical method for the selection of explanatory variables with gFDR control.
 
-- formula 1
-
-$x^2$
-
-- formula 2 
-
-$$x^3$$
-
-edit from web
+To start using the software we suggest to run the file "WorkingExample.m". 
