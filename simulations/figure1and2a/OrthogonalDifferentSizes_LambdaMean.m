@@ -4,8 +4,7 @@
 %% Addpath, file names
 addpath('') %path to the directory "gSLOPE_matlab"
 addpath('') %path to the directory "gSLOPE_code"
-savepath = ''; % path for results)
-
+savepath = ''; % path for results
 %% Groups generating
 I = [];
 groups_sizes = 3:7;
