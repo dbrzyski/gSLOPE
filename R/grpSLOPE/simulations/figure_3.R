@@ -37,7 +37,7 @@ Bfun <- function(l) {
 signal.strength <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
 # considered numbers of truly relevant groups
-n.relevant <- floor(seq(1, 250, length=11))
+n.relevant <- c(3, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250)
 
 # how many times the simulation is repeated
 n.replications <- 300
@@ -61,7 +61,10 @@ for (k in 1:length(n.relevant)) {
     b <- rep(0, p)
     n.signif <- n.relevant[k]
     ind.relevant <- sample(1:n.group, n.signif)
-    for (j in ind.relevant) { b[group.id[[j]]] <- signal.strength }
+    for (j in ind.relevant) {
+      rand_vec <- runif(group.length[j]) + 0.1
+      b[group.id[[j]]] <- (signal.strength * sqrt(group.length[j]) / sqrt(sum(rand_vec^2))) * rand_vec
+    }
 
     # generate the response vector
     y <- X %*% b + rnorm(p, sd=1)
@@ -70,10 +73,18 @@ for (k in 1:length(n.relevant)) {
     # manually. So we will generate the lambda sequence, the weight vectors, and
     # apply the proximal gradient solver for Group SLOPE by hand as three separate steps.
 
-    # generate lambda
-    lambda.mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                                    wt=sqrt(group.length),
-                                    method="mean")
+    # generate lambdas for different group-wise weights
+    sqrt_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                            wt=sqrt(group.length),
+                                            method="mean")
+    len_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                           wt=group.length,
+                                           method="mean")
+    ones <- rep(1, n.group)
+    names(ones) <- names(group.length)
+    one_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                           wt=ones,
+                                           method="mean")
 
     # considered vectors of weight per coefficient
     sqrt_wt <- rep(NA, p)
@@ -85,14 +96,14 @@ for (k in 1:length(n.relevant)) {
 
     # get Group SLOPE solutions with different choices of weights
     sqrt_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                    wt=sqrt_wt, lambda=lambda.mean,
-                                                    verbose=FALSE)
+                                                    wt=sqrt_wt, verbose=FALSE,
+                                                    lambda=sqrt_wt_lambda_mean)
     len_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                   wt=len_wt, lambda=lambda.mean,
-                                                   verbose=FALSE)
+                                                   wt=len_wt, verbose=FALSE,
+                                                   lambda=len_wt_lambda_mean)
     one_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                   wt=one_wt, lambda=lambda.mean,
-                                                   verbose=FALSE)
+                                                   wt=one_wt, verbose=FALSE,
+                                                   lambda=one_wt_lambda_mean)
 
     # store the sizes of the selected groups
 
@@ -118,11 +129,8 @@ for (k in 1:length(n.relevant)) {
       }
     }
 
-    selected.group.length.fraction <-
-      selected.group.length / max(1, sum(selected.group.length))
-
     # return the results
-    selected.group.length.fraction
+    c(selected.group.length, "n.relevant" = n.signif)
   }
 
   cat("done\n")
@@ -135,4 +143,5 @@ for(k in 1:length(n.relevant)) {
 }
 
 # save the results
-save(results, file = "../RData/figure_3_simulation_results.RData")
+save(results, p, fdr, n.replications, group.id,
+     file = "../RData/figure_3_simulation_results.RData")
