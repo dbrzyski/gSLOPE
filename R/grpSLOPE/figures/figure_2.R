@@ -24,7 +24,7 @@ math.labs <- list(bquote(list(q == 0.05, lambda^.("max"))),
 # Load simulation results for Figure 2a
 load("../RData/figure_2a_simulation_results.RData")
 
-# some global simulation parameters
+# some global simulation parameters (FIXME: For better coding style these parameters should have been saved in the .RData file)
 n.group <- 1000
 n.replications <- max(results$replication)
 max.relevant.groups <- max(results$n.relevant)
