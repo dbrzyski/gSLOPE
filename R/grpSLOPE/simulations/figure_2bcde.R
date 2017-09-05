@@ -10,7 +10,7 @@ library(dplyr)
 
 # Adjust the number of cores to your particular system
 library(doParallel)
-registerDoParallel(cores = as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
+registerDoParallel(cores = 4)
 
 
 #--- Set up global parameters for the simulation
@@ -45,7 +45,7 @@ Bfun <- function(l) {
 signal.strength <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
 # considered numbers of truly relevant groups
-n.relevant <- floor(seq(1, 250, length=11))
+n.relevant <- c(3, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250)
 
 # how many times the simulation is repeated
 n.replications <- 300
@@ -117,4 +117,5 @@ for(k in 1:length(n.relevant)) {
 }
 
 # save the results
-save(results, file = "../RData/figure_2bcde_simulation_results.RData")
+save(results, p, n.replications, group.id,
+     file = "../RData/figure_2bcde_simulation_results.RData")

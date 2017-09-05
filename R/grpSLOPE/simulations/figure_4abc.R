@@ -1,8 +1,8 @@
 #--------------------------------------------------------------------------
-# This code is based on the simulation study of Figure 4 in D. Brzyski, 
-# W. Su, M. Bogdan (2015), "Group SLOPE - adaptive selection of 
-# groups of predictors" (http://arxiv.org/abs/1511.09078)
-#--------------------------------------------------------------------------
+# This code is based on the simulation study of Figure 4 in D. Brzyski, A.Gossmann,
+# W. Su, M. Bogdan (2016), "Group SLOPE - adaptive selection of groups of predictors"
+# (preprint available at https://arxiv.org/abs/1610.04960)
+#---------------------------------------------------------------------------
 
 library(grpSLOPE)
 library(dplyr)
@@ -11,7 +11,7 @@ library(grpreg)
 
 # Adjust the number of cores to your particular system
 library(doParallel)
-registerDoParallel(cores = as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
+registerDoParallel(cores = 4)
 
 #--- Set up global parameters for the simulation
 
