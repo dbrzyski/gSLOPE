@@ -1,0 +1,267 @@
+---
+title: "Plots"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r settings, echo=F, message=F, results='hide', warning = F, eval = T}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE, cache = F, fig = TRUE, global.par = TRUE, dev = 'pdf')
+#, dev = 'pdf'
+options(width  = 100)
+options(scipen = 999)
+        
+# Load libraries
+library(data.table)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(GGally)
+library(PerformanceAnalytics)
+library(mlbench)
+library(caret)
+library(glmnet)
+library(Hmisc)
+library(randomForest)
+library(discretization)
+# Make sure functions from dplyr are acting as functions from dplyr 
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+group_by  <- dplyr::group_by
+summarize <- dplyr::summarize
+select    <- dplyr::select
+
+# Define project directory path 
+
+```
+
+```{r aa, echo=F, message=F, results='hide', warning = F, cache = F}
+
+#############################################################################################
+library(Hmisc)
+library(dplyr)
+library(ggplot2)
+
+#------------------------------------------------------------------------------------
+
+k      <- c(1,20,40,60,80);
+k      <- k[5:1];
+iter   <- 100;
+yMAX   <- 0.15;
+q1     <- 0.05;
+q2     <- 0.1;
+
+name1  <- "q = 0.05"
+name2  <- "q = 0.1"
+ 
+pch1   <- 16;
+pch2   <- 17;
+
+lty0   <- 1;
+lty1   <- 2;
+lty2   <- 2;
+
+color0 <- "black";
+col1   <- "red";
+col2   <- "blue";
+
+#------------------------------------------------------------------------------------
+
+setwd("path to \\Figures\\Figure5\\data\\FinalResults")
+
+fdr_gSLOPE       <- t(read.table("fdr_gSLOPE.txt"))       
+fdr_SLOPE_X      <- t(read.table("fdr_SLOPE_X.txt"))      
+fdr_SLOPE_XZ     <- t(read.table("fdr_SLOPE_XZ.txt"))
+power_gSLOPE     <- t(read.table("power_gSLOPE.txt"))    
+power_SLOPE_X    <- t(read.table("power_SLOPE_X.txt"))   
+power_SLOPE_XZ   <- t(read.table("power_SLOPE_XZ.txt"))   
+sfdr_gSLOPE      <- t(read.table("sfdr_gSLOPE.txt"))   
+sfdr_SLOPE_X     <- t(read.table("sfdr_SLOPE_X.txt"))  
+sfdr_SLOPE_XZ    <- t(read.table("sfdr_SLOPE_XZ.txt"))   
+spower_gSLOPE    <- t(read.table("spower_gSLOPE.txt"))  
+spower_SLOPE_X   <- t(read.table("spower_SLOPE_X.txt"))  
+spower_SLOPE_XZ  <- t(read.table("spower_SLOPE_XZ.txt"))
+
+sfdr_gSLOPE      <- sfdr_gSLOPE/sqrt(iter) 
+sfdr_SLOPE_X     <- sfdr_SLOPE_X/sqrt(iter)      
+sfdr_SLOPE_XZ    <- sfdr_SLOPE_XZ/sqrt(iter)
+spower_gSLOPE    <- spower_gSLOPE/sqrt(iter)
+spower_SLOPE_X   <- spower_SLOPE_X/sqrt(iter) 
+spower_SLOPE_XZ  <- spower_SLOPE_XZ/sqrt(iter)
+
+#------------------------------------------------------------------------------------
+setwd("path to \\Figures\\Figure5\\data\\FinalResults_ADD")
+
+fdr_gSLOPE_ADD       <- t(read.table("fdr_gSLOPE.txt"))       
+fdr_SLOPE_X_ADD      <- t(read.table("fdr_SLOPE_X.txt"))      
+fdr_SLOPE_XZ_ADD     <- t(read.table("fdr_SLOPE_XZ.txt"))
+power_gSLOPE_ADD     <- t(read.table("power_gSLOPE.txt"))    
+power_SLOPE_X_ADD    <- t(read.table("power_SLOPE_X.txt"))   
+power_SLOPE_XZ_ADD   <- t(read.table("power_SLOPE_XZ.txt"))   
+sfdr_gSLOPE_ADD      <- t(read.table("sfdr_gSLOPE.txt"))   
+sfdr_SLOPE_X_ADD     <- t(read.table("sfdr_SLOPE_X.txt"))  
+sfdr_SLOPE_XZ_ADD    <- t(read.table("sfdr_SLOPE_XZ.txt"))   
+spower_gSLOPE_ADD    <- t(read.table("spower_gSLOPE.txt"))  
+spower_SLOPE_X_ADD   <- t(read.table("spower_SLOPE_X.txt"))  
+spower_SLOPE_XZ_ADD  <- t(read.table("spower_SLOPE_XZ.txt"))
+
+sfdr_gSLOPE_ADD      <- sfdr_gSLOPE_ADD/sqrt(iter) 
+sfdr_SLOPE_X_ADD     <- sfdr_SLOPE_X_ADD/sqrt(iter)      
+sfdr_SLOPE_XZ_ADD    <- sfdr_SLOPE_XZ_ADD/sqrt(iter)
+spower_gSLOPE_ADD    <- spower_gSLOPE_ADD/sqrt(iter)
+spower_SLOPE_X_ADD   <- spower_SLOPE_X_ADD/sqrt(iter) 
+spower_SLOPE_XZ_ADD  <- spower_SLOPE_XZ_ADD/sqrt(iter)
+
+#------------------------------------------------------------------------------------
+#additive, fdr
+estim     <- rbind(fdr_gSLOPE_ADD, fdr_SLOPE_X_ADD, fdr_SLOPE_XZ_ADD)
+se        <- rbind(sfdr_gSLOPE_ADD, sfdr_SLOPE_X_ADD, sfdr_SLOPE_XZ_ADD)
+lower     <- estim - 2*se
+upper     <- estim + 2*se
+names     <- c(rep("fdr_gSLOPE", times = length(k)), rep("fdr_gSLOPE_X", times = length(k)), rep("fdr_gSLOPE_XZ", times = length(k)))
+sparsity  <- rep(k, times = 3)
+
+df1       <- data.frame("gFDR"= estim, "lower"=lower, "upper"=upper, sparsity, names, row.names=NULL)
+
+
+#------------------------------------------------------------------------------------
+#additive, power
+estim     <- rbind(power_gSLOPE_ADD, power_SLOPE_X_ADD, power_SLOPE_XZ_ADD)
+se        <- rbind(spower_gSLOPE_ADD, spower_SLOPE_X_ADD, spower_SLOPE_XZ_ADD)
+lower     <- estim - 2*se
+upper     <- estim + 2*se
+names     <- c(rep("power_gSLOPE", times = length(k)), rep("power_gSLOPE_X", times = length(k)), rep("power_gSLOPE_XZ", times = length(k)))
+sparsity  <- rep(k, times = 3)
+
+df2       <- data.frame("gFDR"= estim, "lower"=lower, "upper"=upper, sparsity, names, row.names=NULL)
+
+#------------------------------------------------------------------------------------
+#dominance, fdr
+estim     <- rbind(fdr_gSLOPE, fdr_SLOPE_X, fdr_SLOPE_XZ)
+se        <- rbind(sfdr_gSLOPE, sfdr_SLOPE_X, sfdr_SLOPE_XZ)
+lower     <- estim - 2*se
+upper     <- estim + 2*se
+names     <- c(rep("fdr_gSLOPE", times = length(k)), rep("fdr_gSLOPE_X", times = length(k)), rep("fdr_gSLOPE_XZ", times = length(k)))
+sparsity  <- rep(k, times = 3)
+
+df3       <- data.frame("gFDR"= estim, "lower"=lower, "upper"=upper, sparsity, names, row.names=NULL)
+
+
+#------------------------------------------------------------------------------------
+#dominance, power
+estim     <- rbind(power_gSLOPE, power_SLOPE_X, power_SLOPE_XZ)
+se        <- rbind(spower_gSLOPE, spower_SLOPE_X, spower_SLOPE_XZ)
+lower     <- estim - 2*se
+upper     <- estim + 2*se
+names     <- c(rep("power_gSLOPE", times = length(k)), rep("power_gSLOPE_X", times = length(k)), rep("power_gSLOPE_XZ", times = length(k)))
+sparsity  <- rep(k, times = 3)
+
+df4       <- data.frame("gFDR"= estim, "lower"=lower, "upper"=upper, sparsity, names, row.names=NULL)
+
+#------------------------------------------------------------------------------------
+
+xbeg   <- k[1] 
+ybeg   <- q1
+ybeg2  <- q2
+xend   <- k[length(k)]
+yend   <- q1
+yend2  <- q2
+  
+
+p <- ggplot(df1, aes(sparsity, gFDR, colour= names))
+p <- p + geom_segment(mapping = aes(x = xbeg, y = ybeg, xend = xend, yend = yend), linetype = 2, color = "black", size = 0.6)
+p <- p + geom_line(mapping = aes(x = sparsity, y = gFDR, color = names), size = 0.6)
+p <- p + scale_color_manual(values=c("blue", "red", "forestgreen"), labels = expression("gSLOPE  ", "gSLOPE"["X"], "gSLOPE"["XZ"]) )
+p <- p + scale_shape_manual(values = c(17,19,15), labels = expression("gSLOPE  ", "gSLOPE"["X"] , "gSLOPE"["XZ"]) )
+p <- p + geom_errorbar(aes(ymin = lower, ymax = upper), width = 2) 
+p <- p + geom_point(df1, mapping=aes(x = sparsity, y = gFDR, shape = names), size = 5)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.15) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated gFDR', color = "target gFDR", shape = "target gFDR")
+p <- p + theme_bw(base_size = 25)
+p <- p + theme( legend.position = c(.95, .95), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+```
+
+```{r figure5a, fig.width=10, fig.height=8, cache = F}
+plot(p)
+```
+
+```{r bb, fig.width=10, fig.height=8, cache = F}
+p <- ggplot(df2, aes(sparsity, gFDR, colour= names))
+p <- p + geom_segment(mapping = aes(x = xbeg, y = ybeg, xend = xend, yend = yend), linetype = 2, color = "black", size = 0.6)
+p <- p + geom_line(mapping = aes(x = sparsity, y = gFDR, color = names), size = 0.6)
+p <- p + scale_color_manual(values=c("blue", "red", "forestgreen"), labels = expression("gSLOPE  ", "gSLOPE"["X"], "gSLOPE"["XZ"]) )
+p <- p + scale_shape_manual(values = c(17,19,15), labels = expression("gSLOPE  ", "gSLOPE"["X"] , "gSLOPE"["XZ"]) )
+p <- p + geom_errorbar(aes(ymin = lower, ymax = upper), width = 2)
+p <- p + geom_point(df2, mapping=aes(x = sparsity, y = gFDR, shape = names), size = 5)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0.3, 0.8) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated power', color = "target gFDR", shape = "target gFDR")
+p <- p + theme_bw(base_size = 25)
+p <- p + theme( legend.position = c(.95, .3), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+```
+
+```{r figure5b, fig.width=10, fig.height=8, cache = F}
+plot(p)
+```
+
+
+```{r cc, fig.width=10, fig.height=8, cache = F}
+p <- ggplot(df3, aes(sparsity, gFDR, colour= names))
+p <- p + geom_segment(mapping = aes(x = xbeg, y = ybeg, xend = xend, yend = yend), linetype = 2, color = "black", size = 0.6)
+p <- p + geom_line(mapping = aes(x = sparsity, y = gFDR, color = names), size = 0.6)
+p <- p + scale_color_manual(values=c("blue", "red", "forestgreen"), labels = expression("gSLOPE  ", "gSLOPE"["X"], "gSLOPE"["XZ"]) )
+p <- p + scale_shape_manual(values = c(17,19,15), labels = expression("gSLOPE  ", "gSLOPE"["X"] , "gSLOPE"["XZ"]) )
+p <- p + geom_errorbar(aes(ymin = lower, ymax = upper), width = 2) 
+p <- p + geom_point(df3, mapping=aes(x = sparsity, y = gFDR, shape = names), size = 5)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.15) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated gFDR', color = "target gFDR", shape = "target gFDR")
+p <- p + theme_bw(base_size = 25)
+p <- p + theme( legend.position = c(.95, .95), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+```
+
+```{r figure5c, fig.width=10, fig.height=8, cache = F}
+plot(p)
+```
+
+```{r dd, fig.width=10, fig.height=8, cache = F}
+p <- ggplot(df4, aes(sparsity, gFDR, colour= names))
+p <- p + geom_segment(mapping = aes(x = xbeg, y = ybeg, xend = xend, yend = yend), linetype = 2, color = "black", size = 0.6)
+p <- p + geom_line(mapping = aes(x = sparsity, y = gFDR, color = names), size = 0.6)
+p <- p + scale_color_manual(values=c("blue", "red", "forestgreen"), labels = expression("gSLOPE  ", "gSLOPE"["X"], "gSLOPE"["XZ"]) )
+p <- p + scale_shape_manual(values = c(17,19,15), labels = expression("gSLOPE  ", "gSLOPE"["X"] , "gSLOPE"["XZ"]) )
+p <- p + geom_errorbar(aes(ymin = lower, ymax = upper), width = 2)
+p <- p + geom_point(df4, mapping=aes(x = sparsity, y = gFDR, shape = names), size = 5)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0.3, 0.8) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated power', color = "target gFDR", shape = "target gFDR")
+p <- p + theme_bw(base_size = 25)
+p <- p + theme( legend.position = c(.95, .3), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+```
+
+```{r figure5d, fig.width=10, fig.height=8, cache = F}
+plot(p)
+```
+
+<!-- plots could be found in \\Figures5_files\\figure-html\\ directory -->
+

@@ -1,0 +1,212 @@
+---
+title: "Plots"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r settings, echo=F, message=F, results='hide', warning = F, eval = T}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE, cache = F, fig = TRUE, global.par = TRUE, dev = 'pdf')
+#, dev = 'pdf'
+options(width  = 100)
+options(scipen = 999)
+        
+# Load libraries
+library(data.table)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(GGally)
+library(PerformanceAnalytics)
+library(mlbench)
+library(caret)
+library(glmnet)
+library(Hmisc)
+library(randomForest)
+library(discretization)
+# Make sure functions from dplyr are acting as functions from dplyr 
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+group_by  <- dplyr::group_by
+summarize <- dplyr::summarize
+select    <- dplyr::select
+
+# Define project directory path 
+
+```
+
+```{r aa, echo=F, message=F, results='hide', warning = F, cache = F}
+
+#############################################################################################
+library(Hmisc)
+library(dplyr)
+library(ggplot2)
+
+#------------------------------------------------------------------------------------
+
+path1 <- "path to \\Figures\\Figure3\\Data_a\\";
+path2 <- "path to \\Figures\\Figure3\\Data_b\\";
+path3 <- "path to \\Figures\\Figure3\\Data_c\\";
+
+
+k     <- matrix(c(3, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250), 11, 1);
+yMAX  <- 0.4;
+iter  <- 300;
+
+name1 <- "3-el. groups"
+name2 <- "4-el. groups"
+name3 <- "5-el. groups"
+name4 <- "6-el. groups"
+name5 <- "7-el. groups"
+
+
+col1  <- "tomato2";
+col2  <- "blue";
+col3  <- "darkgreen";
+col4  <- "black";
+col5  <- "orange";
+
+setwd(path1)
+
+PROP   <- read.table("PROP_TRUE_01_MEAN_WEAK.txt");
+prop1  <- PROP[,1];
+prop2  <- PROP[,2];
+prop3  <- PROP[,3];
+prop4  <- PROP[,4];
+prop5  <- PROP[,5];
+
+estim    <- c(prop1, prop2, prop3, prop4, prop5)
+names    <- c(rep(name1, times = length(k)), rep(name2, times = length(k)), rep(name3, times = length(k)), rep(name4, times = length(k)), rep(name5, times = length(k))    )
+
+sparsity <- rep(k,times = 5)
+
+#--------------------------------------
+df       <- data.frame("fraction"= estim, sparsity, names)
+#--------------------------------------
+
+p <- ggplot(df, aes(sparsity, fraction, colour= names))
+p <- p + geom_line(mapping = aes(x = sparsity, y = fraction, color = names, fill = names), size = 1, linetype = 1, cex=1)
+p <- p + geom_point(df, mapping=aes(x = sparsity, y = fraction, shape = names, fill=names), size = 5)
+p <- p + scale_color_manual(values=c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + scale_shape_manual(values = c(21 ,22 ,23 ,24 ,25 ))
+p <- p + scale_fill_manual(values = c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.42) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Fraction of groups in STRG')
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.97, .97), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))#, legend.key.size = unit(1.5, 'lines'))
+#p <- p + theme(plot.background = element_rect(fill = 'grey98', colour = 'black'))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+print("a")
+```
+
+```{r figure3a, fig.width=10, fig.height=8, cache = F}
+plot(p)
+print("c")
+```
+
+#-----------------------------------------------------------------------
+
+```{r bb, echo=F, message=F, results='hide', warning = F, cache = F}
+setwd(path2)
+
+PROP   <- read.table("PROP_TRUE_01_MEAN_WEAK.txt");
+prop1  <- PROP[,1];
+prop2  <- PROP[,2];
+prop3  <- PROP[,3];
+prop4  <- PROP[,4];
+prop5  <- PROP[,5];
+
+estim    <- c(prop1, prop2, prop3, prop4, prop5)
+names    <- c(rep(name1, times = length(k)), rep(name2, times = length(k)), rep(name3, times = length(k)), rep(name4, times = length(k)), rep(name5, times = length(k))    )
+
+sparsity <- rep(k,times = 5)
+
+#--------------------------------------
+df       <- data.frame("fraction"= estim, sparsity, names)
+#--------------------------------------
+
+p <- ggplot(df, aes(sparsity, fraction, colour= names, fill = names))
+p <- p + geom_line(mapping = aes(x = sparsity, y = fraction, color = names), size = 1, linetype = 1, cex=1)
+p <- p + geom_point(df, mapping=aes(x = sparsity, y = fraction, shape = names), size = 5)
+#p <- p + scale_color_manual(values=c("red", "blue"))
+p <- p + scale_color_manual(values=c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + scale_shape_manual(values = c(21 ,22 ,23 ,24 ,25 ))
+p <- p + scale_fill_manual(values = c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.42) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Fraction of groups in STRG')
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.97, .97), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))#, legend.key.size = unit(1.5, 'lines'))
+#p <- p + theme(plot.background = element_rect(fill = 'grey98', colour = 'black'))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+
+```
+
+```{r figure3b, fig.width=10, fig.height=8, cache = F}
+plot(p)
+print("a")
+```
+
+#--------------------------------------------------------------
+
+
+#-----------------------------------------------------------------------
+
+```{r cc, echo=F, message=F, results='hide', warning = F, cache = F}
+setwd(path3)
+
+PROP   <- read.table("PROP_TRUE_01_MEAN_WEAK.txt");
+prop1  <- PROP[,1];
+prop2  <- PROP[,2];
+prop3  <- PROP[,3];
+prop4  <- PROP[,4];
+prop5  <- PROP[,5];
+
+estim    <- c(prop1, prop2, prop3, prop4, prop5)
+names    <- c(rep(name1, times = length(k)), rep(name2, times = length(k)), rep(name3, times = length(k)), rep(name4, times = length(k)), rep(name5, times = length(k))    )
+
+sparsity <- rep(k,times = 5)
+
+#--------------------------------------
+df       <- data.frame("fraction"= estim, sparsity, names)
+#--------------------------------------
+
+p <- ggplot(df, aes(sparsity, fraction, colour= names, fill = names))
+p <- p + geom_line(mapping = aes(x = sparsity, y = fraction, color = names), size = 1, linetype = 1, cex=1)
+p <- p + geom_point(df, mapping=aes(x = sparsity, y = fraction, shape = names), size = 5)
+p <- p + scale_color_manual(values=c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + scale_shape_manual(values = c(21 ,22 ,23 ,24 ,25 ))
+p <- p + scale_fill_manual(values = c("red", "blue", "chartreuse3", "darkgoldenrod3", "blueviolet"))
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.42) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Fraction of groups in STRG')
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.97, .97), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=25))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))#, legend.key.size = unit(1.5, 'lines'))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+
+```
+
+```{r figure3c, fig.width=10, fig.height=8, cache = F}
+plot(p)
+print("a")
+```
+
+
+
+
+<!-- plots could be found in \\Figures3_files\\figure-html\\ directory -->
+
+

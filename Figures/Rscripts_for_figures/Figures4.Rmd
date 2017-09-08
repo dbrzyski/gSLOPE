@@ -1,0 +1,358 @@
+---
+title: "Plots"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r settings, echo=F, message=F, results='hide', warning = F, eval = T}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE, cache = F, fig = TRUE, global.par = TRUE, dev = 'pdf')
+#, dev = 'pdf'
+options(width  = 100)
+options(scipen = 999)
+        
+# Load libraries
+library(data.table)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(GGally)
+library(PerformanceAnalytics)
+library(mlbench)
+library(caret)
+library(glmnet)
+library(Hmisc)
+library(randomForest)
+library(discretization)
+# Make sure functions from dplyr are acting as functions from dplyr 
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+group_by  <- dplyr::group_by
+summarize <- dplyr::summarize
+select    <- dplyr::select
+
+# Define project directory path 
+
+```
+
+```{r aa, echo=F, message=F, results='hide', warning = F, cache = F}
+#############################################################################################
+library(Hmisc)
+library(dplyr)
+library(ggplot2)
+
+#------------------------------------------------------------------------------------
+
+k     <- matrix(c(3, 10, 20, 30, 40, 50, 60), 7, 1);
+yMAX  <- 0.75;
+iter  <- 200;
+q1    <- 0.1;
+
+
+name1 <- expression(paste("gSLOPE, q=0.1"))
+name2 <- expression(paste("gLASSO,  ", lambda," =", lambda^"mean","(1)"))
+name3<- expression(paste("gLASSO with cv"))
+
+pch1  <- 17;
+pch2  <- 15;
+pch3  <- 16;
+
+col1  <-  "blue";
+col2  <- "green4";
+col3  <- "red";
+
+names  = c(name1, name2, name3);
+colors = c(col1, col2, col3);
+pchs   = c(pch1, pch2, pch3);
+
+#----------------------------------------------
+setwd('path to \\Figures\\Figure4\\data\\')
+
+fdr1  <- read.table("FDR_01.txt");
+al1   <- as.numeric(fdr1);
+al1   <- as.matrix(al1);
+fdr1  <- al1;
+
+s1    <- read.table("stdFDR_01.txt");
+sl1   <- as.numeric(s1);
+sl1   <- as.matrix(sl1);
+sfdr1 <- sl1/sqrt(iter);
+
+fdr2  <- read.table("gFDR_gLASSO_LM_01.txt");
+al2   <- as.numeric(fdr2);
+al2   <- as.matrix(al2);
+fdr2  <- al2;
+
+s2    <- read.table("std_gFDR_gLASSO_LM_01.txt");
+sl2   <- as.numeric(s2);
+sl2   <- as.matrix(sl2);
+sfdr2 <- sl2/sqrt(iter);
+
+fdr3  <- read.table("gFDR_gLASSO_CV.txt", fill = TRUE);
+fdr3  <- c(unlist(fdr3[1,]), unlist(fdr3[2,1:2]));
+al3   <- as.numeric(fdr3);
+al3   <- as.matrix(al3);
+fdr3  <- al3;
+
+s3    <- read.table("stdgFDR_gLASSO_CV.txt", fill = TRUE);
+s3    <- c(unlist(s3[1,]), unlist(s3[2,1:2]));
+sl3   <- as.numeric(s3);
+sl3   <- as.matrix(sl3);
+sfdr3 <- sl3/sqrt(iter);
+
+pwr1  <- read.table("POWER_01.txt");
+al1   <- as.numeric(pwr1);
+al1   <- as.matrix(al1);
+pwr1  <- al1;
+
+s1    <- read.table("stdPOWER_01.txt");
+sl1   <- as.numeric(s1);
+sl1   <- as.matrix(sl1);
+spwr1 <- sl1/sqrt(iter);
+
+pwr2  <- read.table("POWER_gLASSO_LM_01.txt");
+al2   <- as.numeric(pwr2);
+al2   <- as.matrix(al2);
+pwr2  <- al2;
+
+s2    <- read.table("std_POWER_gLASSO_LM_01.txt");
+sl2   <- as.numeric(s2);
+sl2   <- as.matrix(sl2);
+spwr2 <- sl2/sqrt(iter);
+
+pwr3  <- read.table("POWER_gLASSO_CV.txt", fill = TRUE);
+pwr3  <- c(unlist(pwr3[1,]), unlist(pwr3[2,1:2]));
+al3   <- as.numeric(pwr3);
+al3   <- as.matrix(al3);
+pwr3  <- al3;
+
+s3    <- read.table("stdPOWER_gLASSO_CV.txt", fill = TRUE);
+s3    <- c(unlist(s3[1,]), unlist(s3[2,1:2]));
+sl3   <- as.numeric(s3);
+sl3   <- as.matrix(sl3);
+spwr3 <- sl3/sqrt(iter);
+
+#=======================================================================
+gfdrs       <-  rbind(fdr1, fdr2, fdr3)
+pwrs        <-  rbind(pwr1, pwr2, pwr3)
+gfdr_se     <-  rbind(sfdr1, sfdr2, sfdr3)
+pwr_se      <-  rbind(spwr1, spwr2, spwr3)
+lower_gfdr  <-  gfdrs - 2*gfdr_se
+upper_gfdr  <-  gfdrs + 2*gfdr_se
+lower_pwr   <-  pwrs - 2*pwr_se
+upper_pwr   <-  pwrs + 2*pwr_se
+
+row.names(gfdrs)       <- NULL
+row.names(pwrs)        <- NULL
+row.names(gfdr_se)     <- NULL
+row.names(pwr_se)      <- NULL
+row.names(lower_gfdr)  <- NULL
+row.names(upper_gfdr)  <- NULL
+row.names(lower_pwr)   <- NULL
+row.names(upper_pwr)   <- NULL
+
+names    <- c(rep("A", times = length(k)), rep("B", times = length(k)), rep("C", times = length(k)))
+sparsity <- rep(k,times = 3)
+
+#--------------------------------------
+df       <- data.frame("gFDR"= gfdrs, "lower_gfdr"=lower_gfdr, "upper_gfdr"=upper_gfdr, "pwr"= pwrs, "lower_pwr"=lower_pwr, "upper_pwr"=upper_pwr, sparsity, names)
+#--------------------------------------
+
+xbeg  <-  k[1] - 2
+xend  <-  k[length(k)] + 2
+ybeg  <-  q1
+yend  <-  q1
+
+
+p <- ggplot(df, aes(sparsity, gFDR, colour= names))
+p <- p + geom_line(mapping = aes(x = sparsity, y = gFDR, color = names), size = 0.8, linetype = 1)
+p <- p + scale_color_manual(values=c("blue", "forestgreen", "red"),labels = expression("gSLOPE   ", paste("gLASSO"[lambda[1]^mean],"   ") , "gLASSO"["CV"]))
+p <- p + scale_shape_manual(values = c(17, 15, 19), labels = expression("gSLOPE   ", paste("gLASSO"[lambda[1]^mean],"   ") , "gLASSO"["CV"]) )
+p <- p + geom_errorbar(aes(ymin = lower_gfdr, ymax = upper_gfdr), width = 1) 
+p <- p + geom_point(df, mapping=aes(x = sparsity, y = gFDR, shape = names), size = 8)
+p <- p + geom_segment(mapping = aes(x = xbeg, y = ybeg, xend = xend, yend = yend), linetype = 5, color = "black", size = 0.9)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 0.87) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated gFDR', color = "target gFDR", shape = "target gFDR")
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.01, .99), legend.justification = c("left", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=30))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+p <- p + theme(legend.direction = "horizontal")
+p <- p + scale_fill_manual(values=cbbPalette)
+
+
+```
+
+```{r figure4a, fig.width=10.5, fig.height=10, cache = F}
+plot(p)
+```
+
+#---------------------------------------------
+
+```{r bb, echo=F, message=F, results='hide', warning = F, cache = F}
+p <- ggplot(df, aes(sparsity, gFDR, colour= names))
+p <- p + geom_line(mapping = aes(x = sparsity, y = pwr, color = names), size = 0.8, linetype = 1)
+p <- p + scale_color_manual(values=c("blue", "forestgreen", "red"),labels = expression("gSLOPE   ", paste("gLASSO"[lambda[1]^mean],"   ") , "gLASSO"["CV"]))
+p <- p + scale_shape_manual(values = c(17, 15, 19), labels = expression("gSLOPE   ", paste("gLASSO"[lambda[1]^mean],"   ") , "gLASSO"["CV"]) )
+p <- p + geom_errorbar(aes(ymin = lower_pwr, ymax = upper_pwr), width = 1) 
+p <- p + geom_point(df, mapping=aes(x = sparsity, y = pwr, shape = names), size = 8)
+p <- p + coord_cartesian( xlim = c(k[1],  k[length(k)]),  ylim = c(0, 1.06) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Estimated power')
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.01, .99), legend.justification = c("left", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=30))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.4, "in"))
+p <- p + theme(legend.key = element_rect(size = 10))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+p <- p + theme(legend.direction = "horizontal")
+
+
+```
+
+```{r figure4b, fig.width=10.5, fig.height=10, cache = F}
+plot(p)
+```
+
+#---------------------------------------------
+
+```{r cc, echo=F, message=F, results='hide', warning = F, cache = F}
+setwd('path to \\Figures\\Figure4\\scripts')
+Lgths    <- as.matrix(as.numeric(read.table("Lgths.txt")));
+df       <- data.frame(Lgths)
+
+p <- ggplot(df, aes(Lgths)) + geom_histogram(binwidth=1, colour="black", fill="gray")
+p <- p + theme_bw(base_size = 35)
+p <- p + labs(title="", x = 'Size of group', y = 'Count')
+
+```
+
+```{r figure4c, fig.width=10.5, fig.height=10, cache = F}
+plot(p)
+```
+
+#--------------------------------------------
+
+
+
+
+```{r dd, echo=F, message=F, results='hide', warning = F, cache = F}
+setwd('path to \\Figures\\Figure4\\data\\')
+
+#############################################################################################
+library(Hmisc)
+library(dplyr)
+library(ggplot2)
+
+#------------------------------------------------------------------------------------
+
+max_lam_idx <- 150;
+yMAX        <- 0.15;
+q1          <- 0.1;
+
+#------------------------------------------------------------------------------------
+
+lengths_gSLOPE     <- as.matrix(as.numeric(read.table("meanLGTH_gSLOPEn.txt", row.names = NULL)));
+lengths_gLASSO     <- as.matrix(as.numeric(read.table("meanLGTH.txt", row.names = NULL)));
+lengths_gLASSO_CV  <- read.table("LNGTHS_gLASSO_CV.txt", row.names = NULL, fill = TRUE);
+lengths_gLASSO_CV  <- c(unlist(lengths_gLASSO_CV[1,]), unlist(lengths_gLASSO_CV[2,1:2]));
+lengths_gLASSO_CV  <- as.matrix(as.numeric(lengths_gLASSO_CV));
+
+lengths  <- c(lengths_gSLOPE, lengths_gLASSO, lengths_gLASSO_CV)
+idxs     <- rep(1:7, times = 3)
+names    <- c(rep("gSLOPE", times = 7), rep("gLASSO", times = 7), rep("gLASSO_CV", times = 7))
+df       <- data.frame(lengths, idxs, names)
+df$names <- factor(as.character(df$names), levels = c("gSLOPE", "gLASSO", "gLASSO_CV"))
+
+p <- ggplot(df, aes(x=idxs, y=df$lengths, colour= names))
+p <- p + geom_line(mapping = aes(x=idxs, y=df$lengths, colour= names, linetype = names), size = 1.5)
+p <- p + geom_point(df, mapping=aes(x=idxs, y=df$lengths, colour= names, shape = names), size = 8)
+#p <- p + labs(title="", x = 'Number of relevant groups', y = 'Mean length of selected groups')
+p <- p + scale_shape_manual(values = c(17, 15, 19),  labels = expression(paste("gSLOPE"), paste("gLASSO"[lambda[1]^mean]), "gLASSO"["CV"]) )
+p <- p + scale_linetype_manual(values = c(1,1,1),  labels = expression(paste("gSLOPE"), paste("gLASSO"[lambda[1]^mean]), "gLASSO"["CV"]) )
+p <- p + scale_color_manual(values=c("blue", "forestgreen", "red"), labels = expression(paste("gSLOPE"), paste("gLASSO"[lambda[1]^mean]),"gLASSO"["CV"]) )
+p <- p + labs(title="", x = 'Number of relevant groups', y = 'Mean size of selected groups', color = "a", linetype = "a", shape = "a")
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.04, .04), legend.justification = c("left", "bottom"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=35))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.6, "in"))
+#p <- p + theme(plot.background = element_rect(fill = 'grey98', colour = 'black'))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+p <- p + coord_cartesian(ylim = c(4, 7) )
+p <- p + theme(legend.text.align = 0)
+p <- p + coord_cartesian( xlim = c(1, 7),  ylim = c(2, 8) )
+```
+
+```{r figure4d, fig.width=10.5, fig.height=10, cache = F}
+plot(p)
+```
+
+
+#--------------------------------------------
+
+```{r ee, echo=F, message=F, results='hide', warning = F, cache = F}
+setwd('path to \\Figures\\Figure4\\data\\')
+
+#############################################################################################
+library(Hmisc)
+library(dplyr)
+library(ggplot2)
+
+#------------------------------------------------------------------------------------
+
+max_lam_idx <- 150;
+yMAX        <- 0.15;
+q1          <- 0.1;
+
+#------------------------------------------------------------------------------------
+
+lambda_mean    <- as.matrix(as.numeric(read.table("lambda_mean.txt", row.names = NULL)));
+lambda_mean_nc <- as.matrix(as.numeric(read.table("lambda_mean_nonconvex.txt", row.names = NULL)));
+
+lambda_CV      <- read.table("LAMB_CV.txt", row.names = NULL, fill = TRUE);
+lambda_CV      <- c(unlist(lambda_CV[1,]), unlist(lambda_CV[2,1:2]));
+lambda_CV      <- as.matrix(as.numeric(lambda_CV));
+
+lambda_mean      <- lambda_mean[1:max_lam_idx]
+lambda_mean_nc   <- lambda_mean_nc[1:max_lam_idx]
+lambda_gLASSO    <- rep(lambda_mean[1],  times = max_lam_idx)
+lambda_gLASSO_CV <- 5000*rep(mean(lambda_CV),  times = max_lam_idx)
+
+
+lambdas <- c(lambda_mean, lambda_gLASSO, lambda_mean_nc, lambda_gLASSO_CV)
+idxs    <- rep(1:max_lam_idx, times = 4)
+names   <- c(rep("lambda", times = max_lam_idx), rep("lambda_gL", times = max_lam_idx), rep("lambda_nc", times = max_lam_idx), rep("lambda_gL_cv", times = max_lam_idx))
+df      <- data.frame(lambdas, idxs, names)
+
+df$names <- factor(as.character(df$names), levels = c("lambda", "lambda_gL", "lambda_nc","lambda_gL_cv"))
+
+p <- ggplot(df, aes(x=idxs, y=df$lambdas, colour= names))
+p <- p + geom_line(mapping = aes(idxs, lambdas, colour= names, linetype = names), size = 1.5)
+p <- p + scale_linetype_manual(values = c(1,1,2,1),  labels = expression(paste("final version of ", lambda^ "mean"), paste("sequence  for  ", "gLASSO"[lambda[1]^mean]), paste(" initial (nonmonotonic) sequence"), "average lambda for gLASSO"[CV] ))
+p <- p + scale_color_manual(values=c("blue", "forestgreen", "black", "red"), labels = expression(paste("final version of ", lambda^ "mean"), paste("sequence  for  ", "gLASSO"[lambda[1]^mean]), paste(" initial (nonmonotonic) sequence"),"average lambda for gLASSO"[CV]) )
+p <- p + labs(title="", x = 'Index', y = 'Value', color = "target gFDR", linetype = "target gFDR")
+p <- p + theme_bw(base_size = 35)
+p <- p + theme( legend.position = c(.91, .98), legend.justification = c("right", "top"), legend.box.background = element_rect())
+p <- p + theme(legend.text=element_text(size=31))
+p <- p + theme(legend.title = element_blank())
+p <- p + theme(legend.key.size =  unit(.6, "in"))
+p <- p + theme(legend.background = element_rect(colour = 'black'))
+p <- p + coord_cartesian(ylim = c(1.3, 3.4) )
+p <- p + geom_segment( x = 44, y = 1.3, xend = 44, yend = lambda_mean[44], colour = "black", linetype = 2)
+p <- p + scale_x_continuous(breaks=c(0,44,75,150))
+p <- p + scale_y_continuous(breaks=c(1.37, 2.0, 2.53, 3.0) )
+p <- p + theme(legend.text.align = 0)
+```
+
+```{r figure4e, fig.width=10.5, fig.height=10, cache = F}
+plot(p)
+```
+
+<!-- plots could be found in \\Figures4_files\\figure-html\\ directory -->
